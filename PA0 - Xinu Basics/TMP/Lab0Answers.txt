@@ -1,0 +1,81 @@
+1. The memory layout of xinu based on the addresses derived is as follows :
+
+
+---[prnull] Base Pointer----  0x00fffffc
+
+---[prnull] stack pointer---  0x00ffff2c
+
+----[prnull] stack limit----  0x00fff000
+
+----[main] Base Pointer-----  0x00ffeff8
+
+----[main] stack pointer----  0x00ffef90
+
+-----[main] stack limit-----  0x00ffdffc
+
+            FREE SPACE
+            
+-------------END------------  0x00027c78
+
+            BSS
+            
+------------EDATA-----------  0x0001f540
+        
+        data segment
+        
+----------------------------  0x0001a8bc
+        
+        text segment
+        
+----------------------------  start = 0
+
+
+
+2. The address before the top of the runtime stack is 0x00ffefc0 and after is 0x00ffefb8. The difference is of 8 bytes. The values stored between these two addresses are the EBP of the called function and the return address of the calling function.
+     |       ---------------------      0x00ffefc0 <- Top of the stack before function call            
+     |           Return Address
+     |       ---------------------
+     |               EBP
+     v       ---------------------      0x00ffefb8 <- Top of the stack after function call
+Stack grows
+this way
+
+
+
+3. The machine uses little-endian byte ordering. Using the following C code, we determine which value is stored in the lower byte of an integer by using a character pointer.
+// Begin
+#include <stdio.h>
+
+void main(){
+        int num = 3;
+        if(*(char *)&num == 3)
+        {
+                printf("The machine is little endian");
+        }
+        else
+        {
+                printf("The machine is big endian");
+        }
+}
+// End
+
+
+
+4.  mov  : The mov instruction moves the content from source operand to destination operand
+           The source operand can be a register, variable or a value. The destination can only be register or a variable.
+           Example: mov $9, %eax
+    push : Pushes a value from the single operand to the top of the stack and increments the stack pointer to the new top of the stack.
+           The operand can be a register, variable or a value.
+           Example: push %eax
+    pusha: Pushes all the general purpose registers to the stack in the order AX, CX, DX, BX, SP, BP, SI and DI and updates the stack pointer.
+           No operands are required.
+           Example: pusha
+    pop  : Removes a stack elements from the top of the stack pointer, copies that content into the operand and updates the stack pointer to the new top of the stack.
+           The operand can be a variable or a register.
+           Example: push %eax
+    popa : Pops all the general purpose registers from the stack in the reverse order of pusha and updates the stack pointer.
+           No operands are required for this command.
+           Example: popa
+    
+    
+5. The -O flag is used to convey the level of optimisation to the gcc compiler. By providing -O0, the comiper does not optimise the code and if multiple variables are initialized, they would be printed in the stack. Otherwise, by providing -O with some valid level other than 0, the compiler would attempt to optimise the code at the expense compilation time. In this case, some local variable may get stored in the register and might not be visible in the stack.
