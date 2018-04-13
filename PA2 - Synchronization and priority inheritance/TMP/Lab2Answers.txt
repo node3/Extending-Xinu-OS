@@ -1,0 +1,46 @@
+Answer 1:
+    1. Another approach to solve priority inversion problem is priority ceiling protocol. In this approach, priority is associated with resources and this priority is transferred to any process using it. The priority assigned can be derived from the max priority allowed for processes plus one. This way, a high priority process waiting for a resource held by low priority process would have to wait only for that low priority process once and not indefinitely. The low priority process will finish using the resource with the dynamically assigned priority and return to its original priority when it releases the lock. As compared to priority inheritance, this solution is simpler as there is no trasitivity of priority and updating the priority of processes does not require complex calculation of priorities among different locks and processes.
+
+    2. The implementation of this assignment shows that the priority of a lower priority process is increased using the pinh variable in the proctab when a higher priority process waits for a lock. Xinu does not implement any solution for priority inversion. Thus a low priority process may get stuck in the semaphore queue indefinitely while waiting for a semaphore held by low priority lock. In our implementation, we handle this scenario by increasing the priority of low priority process to that of the high priority process to make sure that the lock is available sooner to it.
+    
+    The following output of the task1.c in XINU shows the comparison:
+        
+    Priority inversion solution using reader/writer lock
+    Priority before resuming Writer 1 : (writer 1: 20), (reader 1: 40)
+    Writer 1 starts, then sleeps 1 second
+    writer 1: to acquire lock
+    writer 1: acquired lock, sleep 3s
+    Priority before resuming Reader 1 : (writer 1: 20), (reader 1: 40)
+    Reader 1 starts, then sleeps 1 second
+    reader 1: to acquire lock
+    Priority before resuming Writer 2 : (writer 1: 40), (reader 1: 40)
+    Writer 2 starts, then sleeps 1 second
+    writer 2: to acquire lock
+    writer 1: to release lock
+    writer 2: acquired lock, sleep 3s
+    writer 2: to release lock
+    reader 1: acquired lock, sleep 2s
+    reader 1: to release lock
+    ----------------------------------------------------
+    Priority inversion problm in XINU semaphore
+    Priority before resuming Writer 3 : (writer 3: 20), (reader 2: 40)
+    Writer 3 starts, then sleeps 1 second
+    writer 3: to acquire sem
+    writer 3: acquired sem, sleep 2s
+    Priority before resuming Reader 2 : (writer 3: 20), (reader 2: 40)
+    Reader 2 starts, then sleeps 1 second
+    reader 2: to acquire sem
+    writer 3: to release sem
+    reader 2: acquired sem, sleep 2s
+    Priority before resuming Writer 4 : (writer 3: -1), (reader 2: 40)
+    Writer 4 starts, then sleeps 1 second
+    writer 4: to acquire sem
+
+    
+    Interpretation of Priority inversion solution using reader/writer lock: Writer 1 has lower priority (20) and acquires the lock. Reader 1 has higher priority of 40 and it requirests for the lock. Since writer 1 has low priority, it is possible that it might get indefinitely stuck in the ready queue. If this happens and writer 1 does not release the lock, reader 1 with high priority will starve in the lock's queue. TO prevent this, once reader 1 enters the lock's queue, the processes which have already acquired the lock (writer 1 in this case) gains the priority of reader 1 (which changes from 20 to 40). This is called priority inheritance.
+    
+    Interpretation of Priority inversion problm in XINU semaphore: Here the low priority processes holding a lock do not inherit any priority to allow higher priority process gain the lock. In this case, the low priority process may not get CPU time as fast as a high priority process would. Due to this reader 3 which has a high priority may not get the lock indefinitely. 
+
+Answer 2:
+The code shows incorrect use of the semaphores and locks. Assuming only variables with global_ prefix are global, the function do_update uses a lock that is local to it (thus using this lock does not prevent race condition). Any process/thread calling this function would be able to attain this lock. The critical section contained within this lock is try_update function. This function uses a global semaphore that is available for all threads and this is used to control the writes to a global buffer. The user should not use a counting semaphore here as multiple processes can be trying to write to the same global buffer and should instead use mutex locks when writing to it. This is because function buffer_add is the critical region where synchronization is required among consurrent processes. If there are multiple processes executing buffer_add function, they can get interleaved. This can allow them to write to the same buffer location in the memory with a counting semaphore and the final value stored within the buffer would depend on the order of scheduling. The output therefore would be non-deterministic and should be appropriately prevented using mutex locks.
+
