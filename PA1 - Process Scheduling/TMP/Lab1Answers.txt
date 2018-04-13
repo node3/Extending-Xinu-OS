@@ -1,0 +1,35 @@
+1. Following are the advantages and disdvantages for each of the schedulers:
+
+   Random Scheduler
+    Advantages: 
+        1. This scheduler uses existing process variables and therefore is also low on storage cost as compared to linux-like-scheduler. 
+        2. However, it requires more computations for random number calculation and will be slower than default Xinu scheduler.
+        3. Random scheduler is simpler to implements as the mechanism to select the processes is relatively simple. 
+    Disadvantages: 
+        1. Randomly choosing processes can cause unfairness for low priority processes. For example, consider process A with priority 1000 and process B with priority 1. There is a very low chance for B to get scheduled and it may starve indefinitely.
+        
+   Linux like scheduler
+    Advantages: 
+        1. Within a given epoch, there is a guarantee of fairness amongst all the processes that are ready for execution.
+    Disadvantages: 
+        1. This scheduler requires additional storage for goodness, counter and quantum of each process. For devices with low storage space, this will cause contention for storage and may reduce the maximum number of processes that can be created. 
+        2. Also, this scheduler will consume more time in scheduling which can be slower than the other two schedulers. Hence there is also an overhead of computation time.
+        3. This scheduler is complex and difficult to maintain. 
+        4. This scheduler will not execute a high priority process until the current epoch has finished. If there are many processes, a new but high priority process may wait for a long time depending on the epoch size.
+    
+   Default xinu scheduler
+    Advantages: 
+        1. Default xinu scheduler has the simplest mechanism to implement as compared with the above two schedulers. 
+        2. It uses existing process variables and therefore is very low on storage cost as compared to linux-like-scheduler.
+        3. It does not need any additional computation of goodness or random number generation. Hence it is computationally lineant.
+    Disadvantages: 
+        1. Choosing processes based on priority only can cause unfairness for low priority processes. For example, consider process A with priority 1000 and process B with priority 1. B will not be executed until A is not finished and therefore B may starve indefinitely. This is a serious disadvantage if an operating system wants to perform efficient multitasking.
+        
+        
+2. For alloting 20% to P1, 30% to P2, and 50% to P3 from the available CPU time, the processes should be alloted time in the ratio of 2:3:5 respectively. Hence the priorities should be calculated as time to be alloted to a process over the sum of total CPU time. For process P1, we say it is 20/(20+30+50) = 20/100. Similary, for P2 and P3 we will get 30/100 and 50/100 respectively. 
+
+    Generalizing this result, for any ith process out of n total processes whose required CPU time is denoted by xi, the ratio will be given by xi/(x1 + x2 + x3 + .. + xn)
+        
+        
+3. Each of the scheduler ensure that CPU time is given to all of the non-NULL processes whose priority is more than 0. Therefore, NULL process will run only when there are not other processes in all three scheduler.
+        
