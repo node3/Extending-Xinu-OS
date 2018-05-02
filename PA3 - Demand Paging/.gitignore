@@ -1,0 +1,9 @@
+*.swp
+*.swo
+*.o
+compile/version
+compile/xinu.elf
+h/conf.h
+lib/libxc.a
+lib/libxc/libxc.a
+compile/vn
